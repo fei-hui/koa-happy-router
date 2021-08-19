@@ -1,5 +1,6 @@
 const Koa = require("koa");
 const http = require("http");
+const should = require("should");
 const expect = require("expect.js");
 const request = require("supertest");
 const HappyRouter = require("../../dist/lib").default;
@@ -88,6 +89,49 @@ describe("Constructor", () => {
       },
     ]);
     app.use(oneRouter.routes()).use(twoRouter.routes());
+
+    request(http.createServer(app.callback()))
+      .get("/one")
+      .expect(200)
+      .end((error, response) => {
+        if (error) return done(error);
+        expect(response.text).to.be("This is one page");
+
+        request(http.createServer(app.callback()))
+          .get("/two")
+          .expect(200)
+          .end((err, res) => {
+            if (err) return done(err);
+            expect(res.text).to.be("This is two page");
+            done();
+          });
+      });
+  });
+  it("5. Merge multiple constructor", (done) => {
+    const app = new Koa();
+    const router = new HappyRouter();
+    const oneRouter = new HappyRouter({
+      prefix: "/one",
+    });
+    const twoRouter = new HappyRouter({
+      prefix: "/two",
+    });
+    oneRouter.addRoutes([
+      {
+        url: "/",
+        method: "GET",
+        handler: (ctx) => (ctx.body = "This is one page"),
+      },
+    ]);
+    twoRouter.addRoutes([
+      {
+        url: "/",
+        method: "GET",
+        handler: (ctx) => (ctx.body = "This is two page"),
+      },
+    ]);
+    router.use(oneRouter.routes()).use(twoRouter.routes());
+    app.use(router.routes());
 
     request(http.createServer(app.callback()))
       .get("/one")
@@ -515,6 +559,115 @@ describe("Middlewares", () => {
       .end((err, res) => {
         if (err) return done(err);
         expect(res.text).to.be("firstMiddlewares,thirdMiddlewares,Hello World");
+        done();
+      });
+  });
+  it("7. Register middleware by use", (done) => {
+    const app = new Koa();
+    const router = new HappyRouter();
+    router.use(async (ctx, next) => {
+      ctx.body = ctx.body || { text: "Hello World from use" };
+      await next();
+    });
+    router.addRoutes([
+      {
+        url: "/helloworld",
+        method: "GET",
+        handler: (ctx) => {
+          ctx.body = { text: "Hello World" };
+        },
+      },
+      {
+        url: "/use",
+        method: "GET",
+      },
+    ]);
+    app.use(router.routes());
+    request(http.createServer(app.callback()))
+      .get("/helloworld")
+      .expect(200)
+      .end((error, response) => {
+        if (error) return done(error);
+        expect(response.body).to.eql({ text: "Hello World" });
+
+        request(http.createServer(app.callback()))
+          .get("/use")
+          .expect(200)
+          .end((err, res) => {
+            if (err) return done(err);
+            expect(res.body).to.eql({ text: "Hello World from use" });
+            done();
+          });
+      });
+  });
+  it("8. Order of middlewares between use and registerMiddlewares", (done) => {
+    const app = new Koa();
+    const router = new HappyRouter();
+    const middlewareSort = [];
+    router.use(async (_ctx, next) => {
+      middlewareSort.push("beforeOneMiddlewares");
+      await next();
+    });
+    router.registerMiddlewares({
+      firstMiddlewares: (text) => async (_ctx, next) => {
+        middlewareSort.push(text);
+        await next();
+      },
+      secondMiddlewares: (text) => async (_ctx, next) => {
+        middlewareSort.push(text);
+        await next();
+      },
+      thirdMiddlewares: (text) => async (_ctx, next) => {
+        middlewareSort.push(text);
+        await next();
+      },
+    });
+    router.sortMiddlewares([
+      "thirdMiddlewares",
+      "firstMiddlewares",
+      "secondMiddlewares",
+    ]);
+    router.use(async (_ctx, next) => {
+      middlewareSort.push("beforeTwoMiddlewares");
+      await next();
+    });
+    router.addRoutes([
+      {
+        url: "/",
+        method: "GET",
+        firstMiddlewares: "firstMiddlewares",
+        secondMiddlewares: "secondMiddlewares",
+        thirdMiddlewares: "thirdMiddlewares",
+        middlewares: [
+          async (_ctx, next) => {
+            middlewareSort.push("firstMiddlewaresInRoute");
+            await next();
+          },
+          async (_ctx, next) => {
+            middlewareSort.push("secondMiddlewaresInRoute");
+            await next();
+          },
+        ],
+        handler: (ctx) => {
+          middlewareSort.push("Hello World");
+          ctx.body = middlewareSort.join(",");
+        },
+      },
+    ]);
+    router.use(async (_ctx, next) => {
+      middlewareSort.push("noExecute");
+      await next();
+    });
+    app.use(router.routes()).use(router.allowedMethods());
+
+    request(http.createServer(app.callback()))
+      .get("/")
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.text).to.be(
+          "beforeOneMiddlewares,beforeTwoMiddlewares,thirdMiddlewares,firstMiddlewares,secondMiddlewares,firstMiddlewaresInRoute,secondMiddlewaresInRoute,Hello World"
+        );
         done();
       });
   });

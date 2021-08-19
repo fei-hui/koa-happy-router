@@ -52,6 +52,7 @@ export type Middlewares = (
  * - `addRoutes` - Add routes to router
  * - `sortMiddlewares` - Declare the execution order of middlewares
  * - `registerMiddlewares` - Register middlewares with router
+ * - `use` - Use given middleware
  * - `routes` - Returns routes matching the request
  * - `allowedMethods` - Returns separate middleware for response
  * @example
@@ -253,6 +254,25 @@ class HappyRouter {
     Object.keys(middlewares).forEach((key) => {
       this.middlewaresStack.set(key, middlewares[key]);
     });
+  }
+  /**
+   *
+   * Use constuctor or middlewares.
+   *
+   * Middlewares will execute in the order of defined by `.use()` and its run before `registerMiddlewares`.
+   * Used earlier than the `addRoutes` method.
+   *
+   * @example
+   * ```javascript
+   * router.use(async(ctx, next) => {
+   *   console.log('use before registerMiddlewares');
+   *   await next();
+   * });
+   * ```
+   */
+  public use(...middleware: RouteMiddlewares) {
+    const routerInstance = this.routerInstance as KoaRouter;
+    return routerInstance.use(...middleware);
   }
   /**
    * Returns router middleware which dispatches a route matching the request.

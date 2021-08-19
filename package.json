@@ -1,6 +1,6 @@
 {
   "name": "koa-happy-router",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "koa-happy-router provides easy-to-use routing configuraion, smart and powerful middleware mechanism.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -10,7 +10,8 @@
     "commit": "git-cz",
     "prepare": "husky install",
     "test": "mocha test/**/*.js",
-    "build": "rimraf dist && tsc && node scripts/build"
+    "build": "rimraf dist && tsc && node scripts/build",
+    "changelog": "npx conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md"
   },
   "homepage": "https://github.com/fei-hui/koa-happy-router#readme",
   "keywords": [
@@ -34,6 +35,7 @@
     "@types/koa": "^2.13.4",
     "@types/koa-router": "^7.4.4",
     "commitizen": "^4.2.4",
+    "conventional-changelog-cli": "^2.1.1",
     "cz-conventional-changelog": "^3.3.0",
     "expect.js": "^0.3.1",
     "husky": "^7.0.0",
@@ -46,7 +48,7 @@
     "typescript": "^4.3.5"
   },
   "files": [
-    "dist",
+    "lib",
     "README.md"
   ],
   "engines": {

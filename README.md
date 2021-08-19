@@ -40,7 +40,7 @@ router.addRoutes([
   },
 ]);
 
-app.use(route.routes()).use(route.allowMethods());
+app.use(router.routes()).use(router.allowMethods());
 app.listen(8080);
 ```
 
@@ -100,7 +100,7 @@ router.addRoutes([
   },
 ]);
 
-app.use(route.routes()).use(route.allowMethods());
+app.use(router.routes()).use(router.allowMethods());
 app.listen(8080);
 ```
 
