@@ -34,7 +34,7 @@ export type RouteHandler = (
 export type Route<T = void> = {
   url: string;
   handler?: RouteHandler;
-  middlewares: RouteMiddlewares;
+  middlewares?: RouteMiddlewares;
   method?: keyof typeof REQUEST_METHODS;
 } & T;
 

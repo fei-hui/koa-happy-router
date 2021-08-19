@@ -1,6 +1,6 @@
 {
   "name": "koa-happy-router",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "koa-happy-router provides easy-to-use routing configuraion, smart and powerful middleware mechanism.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
