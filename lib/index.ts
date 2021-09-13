@@ -8,12 +8,20 @@ import {
 
 /** Router instance */
 export interface RouterOptions {
+  /** Prefix for all routes */
   prefix?: string;
+  /** Runtime envrionment, it's useless now */
   env?: "development" | "production";
+  /** Whether or not routes should matched strictly.
+   *  If strict matching is enabled,
+   *  the trailing slash is taken into account when matching routes.
+   */
   strict?: boolean;
+  /** Methods which should be supported by the router. */
   methods?: Array<keyof typeof REQUEST_METHODS>;
+  /** Error collection mechanism to collect error in `handler` method. */
   errorHandler?: (
-    error: Error,
+    error: unknown,
     ctx: KoaRouter.RouterContext,
     next?: Application.Next
   ) => void;
@@ -57,8 +65,8 @@ export type Middlewares = (
  * - `allowedMethods` - Returns separate middleware for response
  * @example
  * ```javascript
- * const Koa = require('koa');
- * const HappyRouter = require('koa-happy-router');
+ * import Koa from 'koa';
+ * import HappyRouter from 'koa-happy-router';
  * const app = new Koa();
  * const router = new HappyRouter();
  *
@@ -107,11 +115,11 @@ class HappyRouter {
    * - `errorHandler` Error collection mechanism to collect error in `handler` method.
    * @example
    * ```javascript
-   * const Koa = require('koa');
-   * const HappyRouter = require('koa-happy-router');
+   * import Koa from 'koa';
+   * import HappyRouter from 'koa-happy-router';
    * const app = new Koa();
    * const router = new HappyRouter({
-   *   prefix: 'api',
+   *   prefix: '/api',
    *   env: 'development',
    *   strict: true,
    *   methods: ['GET', 'POST', 'OPTIONS'],
