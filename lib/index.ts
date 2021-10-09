@@ -20,12 +20,15 @@ export interface RouterOptions {
   /** Methods which should be supported by the router. */
   methods?: Array<keyof typeof REQUEST_METHODS>;
   /** Error collection mechanism to collect error in `handler` method. */
-  errorHandler?: (
-    error: unknown,
-    ctx: KoaRouter.RouterContext,
-    next?: Application.Next
-  ) => void;
+  errorHandler?: ErrorHandler;
 }
+
+/** Error collection mechanism to collect error in `handler` method. */
+export type ErrorHandler = (
+  error: unknown,
+  ctx: KoaRouter.RouterContext,
+  next?: Application.Next
+) => void;
 
 /** Middlewares in route */
 export type RouteMiddlewares = Array<
@@ -101,7 +104,7 @@ export type Middlewares = (
  * ```
  */
 class HappyRouter {
-  private errorHandler?: RouterOptions["errorHandler"];
+  private errorHandler?: ErrorHandler;
   private routerInstance?: KoaRouter;
   private middlewaresKeys: Set<string> = new Set();
   private middlewaresStack: Map<string, Middlewares> = new Map();
