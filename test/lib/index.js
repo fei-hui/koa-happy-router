@@ -297,6 +297,59 @@ describe("Request", () => {
           });
       });
   });
+  it("6. POST method with parameters", (done) => {
+    const app = new Koa();
+    const router = new HappyRouter({
+      logger: true
+    });
+    router.addRoutes([
+      {
+        url: "/demo",
+        method: "POST",
+        handler: (ctx) => {
+          ctx.body = "Hello World";
+        },
+      },
+    ]);
+    app.use(router.routes()).use(router.allowedMethods());
+
+    request(http.createServer(app.callback()))
+      .post("/demo")
+      .set('user-agent', 'should.js')
+      .send({ username: 'fei-hui' })
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.text).to.be("Hello World");
+        done();
+      });
+  });
+  it("7. 500 Bad Request with logger", (done) => {
+    const app = new Koa();
+    const router = new HappyRouter({
+      logger: true
+    });
+    router.addRoutes([
+      {
+        url: "/",
+        method: "GET",
+        handler: (ctx) => {
+          ctx.status = 500
+          ctx.body = JSON.parse("");
+        },
+      },
+    ]);
+    app.use(router.routes()).use(router.allowedMethods());
+
+    request(http.createServer(app.callback()))
+      .get("/")
+      .expect(500)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.text).to.be("Internal Server Error");
+        done();
+      });
+  })
 });
 
 describe("Middlewares", () => {
