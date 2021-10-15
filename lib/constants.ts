@@ -10,5 +10,5 @@ export enum REQUEST_METHODS {
 }
 /** Initial request method */
 export const INITIAL_METHOD = "ALL";
-/** Initial fields in route, ant then isn't allowd to change */
+/** Initial fields in route, and then isn't allowd to change */
 export const INITIAL_ROUTE_FIELDS = ["url", "method", "middlewares", "handler"];
