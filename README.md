@@ -27,8 +27,8 @@ yarn add koa-happy-router
 ### Basic Usage
 
 ```javascript
-const Koa = require("koa");
-const HappyRouter = require("koa-happy-router");
+import Koa from "koa";
+import HappyRouter from "koa-happy-router";
 
 const app = new Koa();
 const router = new HappyRouter();
@@ -50,7 +50,8 @@ You can register the global middleware by `registerMiddlewares`, which can be us
 
 ```javascript
 const Koa = require("koa");
-const HappyRouter = require("koa-happy-router");
+// If you use `require`
+const { default: HappyRouter } = require("koa-happy-router");
 const { default: AsyncValidator } = require("async-validator");
 
 const app = new Koa();
@@ -109,8 +110,8 @@ app.listen(8080);
 `koa-happy-router` is written in Typescript, so you could use it in Typescript.
 
 ```typescript
-const Koa = require("koa");
-const HappyRouter = require("koa-happy-router");
+import Koa from "koa";
+import HappyRouter from "koa-happy-router";
 
 const app = new Koa();
 const router = new HappyRouter();

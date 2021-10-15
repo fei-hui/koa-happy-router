@@ -5,19 +5,43 @@ import {
   INITIAL_ROUTE_FIELDS,
   REQUEST_METHODS,
 } from "./constants";
+import requestLogger from "./logger";
 
 /** Router instance */
 export interface RouterOptions {
+  /** Prefix for all routes */
   prefix?: string;
+  /** Runtime envrionment, it's useless now */
   env?: "development" | "production";
+  /** Whether or not routes should matched strictly.
+   *  If strict matching is enabled,
+   *  the trailing slash is taken into account when matching routes.
+   */
   strict?: boolean;
+  /**
+   * Enable log printing, default is false
+   *
+   * @example
+   * ```shell
+   * DEBUG [::ffff:127.0.0.1] [2020-01-01 00:00:00::001] --> GET /api/demo?key=value - UserAgent
+   * DEBUG [::ffff:127.0.0.1] [2020-01-01 00:00:00::001] <-- GET /api/demo?key=value - 20ms
+   * DEBUG [::ffff:127.0.0.1] [2020-01-01 00:00:00::001] --> POST /api/demo - {key="value"} - UserAgent
+   * ERROR [::ffff:127.0.0.1] [2020-01-01 00:00:00::001] <-- POST /api/demo - 500 - 6ms
+   * ```
+   */
+  logger?: boolean;
+  /** Methods which should be supported by the router. */
   methods?: Array<keyof typeof REQUEST_METHODS>;
-  errorHandler?: (
-    error: Error,
-    ctx: KoaRouter.RouterContext,
-    next?: Application.Next
-  ) => void;
+  /** Error collection mechanism to collect error in `handler` method. */
+  errorHandler?: ErrorHandler;
 }
+
+/** Error collection mechanism to collect error in `handler` method. */
+export type ErrorHandler = (
+  error: unknown,
+  ctx: KoaRouter.RouterContext,
+  next?: Application.Next
+) => void;
 
 /** Middlewares in route */
 export type RouteMiddlewares = Array<
@@ -57,8 +81,8 @@ export type Middlewares = (
  * - `allowedMethods` - Returns separate middleware for response
  * @example
  * ```javascript
- * const Koa = require('koa');
- * const HappyRouter = require('koa-happy-router');
+ * import Koa from 'koa';
+ * import HappyRouter from 'koa-happy-router';
  * const app = new Koa();
  * const router = new HappyRouter();
  *
@@ -93,7 +117,8 @@ export type Middlewares = (
  * ```
  */
 class HappyRouter {
-  private errorHandler?: RouterOptions["errorHandler"];
+  private enableLogger: boolean;
+  private errorHandler?: ErrorHandler;
   private routerInstance?: KoaRouter;
   private middlewaresKeys: Set<string> = new Set();
   private middlewaresStack: Map<string, Middlewares> = new Map();
@@ -102,18 +127,20 @@ class HappyRouter {
    * @property
    * - `env` Runtime envrionment.
    * - `prefix` Prefix for all routes.
+   * - `logger` Enable log printing.
    * - `strict` Whether or not routes should matched strictly. If `strict` matching is enabled, the trailing slash is taken into account when matching routes.
    * - `methods` Methods which should be supported by the router.
    * - `errorHandler` Error collection mechanism to collect error in `handler` method.
    * @example
    * ```javascript
-   * const Koa = require('koa');
-   * const HappyRouter = require('koa-happy-router');
+   * import Koa from 'koa';
+   * import HappyRouter from 'koa-happy-router';
    * const app = new Koa();
    * const router = new HappyRouter({
-   *   prefix: 'api',
+   *   prefix: '/api',
    *   env: 'development',
    *   strict: true,
+   *   logger: true,
    *   methods: ['GET', 'POST', 'OPTIONS'],
    *   errorHandler: (error, ctx) => {
    *     ctx.body = { status: -1, message: error.message, url: ctx.url }
@@ -130,6 +157,11 @@ class HappyRouter {
       strict: options?.strict,
       methods: options?.methods,
     });
+    // Add log print
+    this.enableLogger = !!options?.logger;
+    if (this.enableLogger) {
+      this.routerInstance.use(requestLogger);
+    }
   }
 
   /**
